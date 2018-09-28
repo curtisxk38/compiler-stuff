@@ -24,13 +24,18 @@ def get_follow(g, first):
     # cover base cases first
     base_follow(follow, first, g)
 
-    change_made = False
-    while False:
+    
+    while True:
+        change_made = False
         for rule in g.grammar["rules"]:
             # if B -> YXA, and "" in First(A), then Follow(B) is in Follow(A)
             if len(rule["R"]) > 1 and "" in first[rule["R"][-1]]:
                 second_last_sym = rule["R"][-2]
+                # keep track of size of follow[second_last_sym] to see if changes are made
+                old_size = len(follow[second_last_sym])
                 follow[second_last_sym].update(follow[rule["L"]])
+                if old_size != len(follow[second_last_sym]):
+                    change_made = True
 
         if not change_made:
             break
@@ -51,10 +56,12 @@ def get_first(g):
     # cover 2 base cases
     base_first(first, g)
     # 'recursive' step
-    change_made = False
     while True:
+        change_made = False
         # iterate over rules in grammar
         for rule in g.grammar["rules"]:
+            # keep track of size of first[rule["L"]] to see if changes are made
+            old_size = len(first[rule["L"]])
             # find the first symbol in RHS of rule,
             #  where the symbol does not go to ""
             all_empty = True
@@ -67,6 +74,9 @@ def get_first(g):
             #  then "" is in the first of LHS of this rule
             if all_empty:
                 first[rule["L"]].add("")
+
+            if old_size != len(first[rule["L"]]):
+                change_made = True
         
         # do the 'recursive' step until no changes are made to any first sets        
         if not change_made:
