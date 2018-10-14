@@ -10,12 +10,19 @@ def construct_parse_table(g):
     # for rule A -> a (a could be string of terms/nonterms)
     for rule in g.rules:
         row = g.nonterm.index(rule.lhs)
-        first_set = first[rule.rhs[0]]
+        first_set = []
+        for idx, sym in enumerate(rule.rhs):
+            if len(first_set) == 0:
+                first_set.extend(first[sym])
+            else:
+                if "" in first[rule.rhs[idx - 1]]:
+                    first_set.extend(first[sym])
+        print("{}: {}".format(rule, first_set))
         # For each term t in First(a) add A->a to M[A,t] (only if t != "")
         for term in first_set:
             col = g.term.index(term)
             if term != "":
-                parse_table[row][col] = rule
+                parse_table[row][col] = rule.rhs
             # If "" in First(a), for each terminal b in Follow(A),
             #  add A->a to M[A,b]
             else:
@@ -25,7 +32,7 @@ def construct_parse_table(g):
                         col = -1
                     else:
                         col = g.term.index(sym)
-                    parse_table[row][col] = rule
+                    parse_table[row][col] = rule.rhs
 
 
     return parse_table
