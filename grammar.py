@@ -3,15 +3,15 @@ import json
 class Grammar:
     def __init__(self, json_file):
         with open(json_file, "r") as f:
-                self.grammar = json.load(f)
+                json_grammar = json.load(f)
 
         self.rules = []
-        for rule in self.grammar["rules"]:
+        for rule in json_grammar["rules"]:
         	self.rules.append(Rule(rule))
 
-        self.start = self.grammar["start"]
-        self.nonterm = self.grammar["nonterm"]
-        self.term = self.grammar["term"]
+        self.start = json_grammar["start"]
+        self.nonterm = json_grammar["nonterm"]
+        self.term = json_grammar["term"]
 
     def all_symbols(self):
         return self.nonterm + self.term
