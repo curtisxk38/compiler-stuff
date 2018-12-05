@@ -1,10 +1,18 @@
 import first_follow
 import grammar
 
-class State:
-    def __init__(self, dist_rules, transitions):
-        self.dist_rules = dist_rules
+class DFA:
+    def __init__(self, states, transitions):
+        self.states = states
         self.transitions = transitions
+
+class State:
+    def __init__(self, dist_rules):
+        self.dist_rules = list(dist_rules)
+        self.transitions = {}
+
+    def __repr__(self):
+        return str(self.dist_rules)
 
 class DistRule:
     """
@@ -42,11 +50,39 @@ def make_dfa(first, follow, g):
     g.rules.append(new_rule)
 
     kernel = DistRule(g.rules[0],0)
+    start_items = closure(set([kernel]), g)
     
-    
-    dfa = [[]]
-    
-    return dfa
+
+
+    lr0_items = set([tuple(start_items)])
+    transitions = []
+
+    while True:
+        old_size = len(lr0_items)
+        to_add = []
+        for items in lr0_items:
+            for sym in g.all_symbols():
+                new_items = tuple(goto(items, sym, g))
+                if len(new_items) > 0:
+                    transitions.append((items, new_items, sym))
+                    to_add.append(new_items)
+        lr0_items.update(to_add)
+        if old_size == len(lr0_items):
+            break
+    items_to_states = {}
+    for items in lr0_items:
+        if items not in items_to_states:
+            items_to_states[items] = State(items)
+    actual_transitions = []
+    for transition in transitions:
+        start, end, sym = transition
+        start_state = items_to_states[start]
+        end_state = items_to_states[end]
+        start_state.transitions[sym] = end_state
+        actual_transitions.append([start_state, end_state, sym])
+
+    states = [states for _, states in items_to_states.items()]
+    return DFA(states, transitions)
 
 def make_parse_table(dfa,follow,grammar):
     action = [[]]
@@ -55,9 +91,10 @@ def make_parse_table(dfa,follow,grammar):
 def goto(dist_rules, sym, g):
     new_items = []
     for dist_rule in dist_rules:
-        sym_after = dist_rule.rule.rhs[dist_rule.dist_pos]
-        if sym_after == sym:
-            new_items.append(dist_rule.advance())
+        if dist_rule.dist_pos < len(dist_rule.rule.rhs):
+            sym_after = dist_rule.rule.rhs[dist_rule.dist_pos]
+            if sym_after == sym:
+                new_items.append(dist_rule.advance())
     return closure(set(new_items), g)
 
 def closure(closure_set, g):
@@ -85,11 +122,11 @@ def main():
     first = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first)
 
-    print(closure(set([DistRule(g.rules[0],0), g])))
+    print(closure(set([DistRule(g.rules[0],0)]), g))
 
 
     dfa = make_dfa(first, follow, g)
-    print(dfa)
+    print(len(dfa.states))
 
 if __name__ == "__main__":
     main()
