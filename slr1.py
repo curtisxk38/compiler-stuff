@@ -6,6 +6,24 @@ class DFA:
         self.states = states
         self.transitions = transitions
 
+    def generate_dot_file(self):
+        digraph = "digraph G {\n"
+
+        for transition in self.transitions:
+            start, end, sym = transition
+            start_str = self.gen_state_label(start)
+            end_str = self.gen_state_label(end)
+            digraph += "\t\"{}\" -> \"{}\" [ label = \"{}\" ];\n".format(start_str, end_str, sym)
+        digraph += "}"
+        return digraph
+
+    def gen_state_label(self, state):
+        label = ""
+        for rule in state.dist_rules:
+            label += "{}\\n".format(rule)
+        return label
+
+
 class State:
     def __init__(self, dist_rules):
         self.dist_rules = list(dist_rules)
@@ -78,11 +96,15 @@ def make_dfa(first, follow, g):
         start, end, sym = transition
         start_state = items_to_states[start]
         end_state = items_to_states[end]
+        # update each states' transitions
         start_state.transitions[sym] = end_state
-        actual_transitions.append([start_state, end_state, sym])
+        # also save transitions
+        actual_t = [start_state, end_state, sym]
+        if actual_t not in actual_transitions:
+            actual_transitions.append(actual_t)
 
     states = [states for _, states in items_to_states.items()]
-    return DFA(states, transitions)
+    return DFA(states, actual_transitions)
 
 def make_parse_table(dfa,follow,grammar):
     action = [[]]
@@ -126,7 +148,7 @@ def main():
 
 
     dfa = make_dfa(first, follow, g)
-    print(len(dfa.states))
+    print(dfa.generate_dot_file())
 
 if __name__ == "__main__":
     main()
