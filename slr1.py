@@ -72,7 +72,7 @@ def make_dfa(first, follow, g):
     new_rule = grammar.Rule({"L":new_start, "R":[old_start]})
     g.rules.append(new_rule)
 
-    kernel = DistRule(g.rules[0],0)
+    kernel = DistRule(g.rules[-1],0)
     start_items = closure(set([kernel]), g)
     start_items = tuple(start_items)
     
@@ -162,7 +162,7 @@ def make_parse_table(dfa, follow, g):
                         construction_table_error(action, index, col_index, new_rule)
             # create accept for action table
             # When we augmented the grammar, we added a new rule at the end of the rules list
-            if dist_rule.rule == g.rules[-1] and dist_rule.dist_pos == len(dist_rule.rule.rhs):
+            if dist_rule.dist_pos == len(dist_rule.rule.rhs) and dist_rule.rule == g.rules[-1]:
                 # If dist_rule.rule is: S' -> S.
                 #  action[index][$] = accept
                 if action[index][-1] is None:
@@ -170,6 +170,40 @@ def make_parse_table(dfa, follow, g):
                 else:
                     construction_table_error(action, index, len(action[index])-1, "accept")
     return action, goto_table
+
+def parse(start_state, action_table, goto_table, input_string, g):
+    stack = [start_state]
+    while True:
+        current_state = stack[-1]
+        try:
+            sym = g.term.index(input_string[0])
+        except ValueError:
+            # sym is $
+            sym = -1
+        
+        action = action_table[current_state][sym]
+        
+        if action == "accept":
+            break
+        elif action[0] == "s":
+            # shift
+            next_state = int(action[1])
+            stack.append(next_state)
+            # take sym out of input
+            input_string = input_string[1:]
+        elif action[0] == "r":
+            reduce_rule = g.rules[int(action[1])]
+            to_pop = len(reduce_rule.rhs)
+            for i in range(to_pop):
+                stack.pop()
+            exposed_state = stack[-1]
+            # symbol you reduce to
+            lhs_symbol = g.nonterm.index(reduce_rule.lhs)
+            next_state = goto_table[exposed_state][lhs_symbol]
+            stack.append(next_state)
+            print(reduce_rule)
+        else:
+            raise ValueError("No valid action for state {} and symbol {}".format(current_state, sym))
 
 def goto(dist_rules, sym, g):
     new_items = []
@@ -205,14 +239,14 @@ def main():
     first = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first)
 
-    print(closure(set([DistRule(g.rules[0],0)]), g))
-
-
     dfa = make_dfa(first, follow, g)
     #print(dfa.generate_dot_file())
     action, goto_table = make_parse_table(dfa, follow, g)
-    print(action)
-    print(goto_table)
+    #print(action)
+    #print(goto_table)
+
+    start_state = dfa.states.index(dfa.start_state)
+    parse(start_state, action, goto_table, "(a)$", g)
 
 if __name__ == "__main__":
     main()

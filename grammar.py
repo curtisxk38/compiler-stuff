@@ -22,4 +22,4 @@ class Rule:
 		self.rhs = json_rule["R"]
 
 	def __repr__(self):
-		return "{} -> {}".format(self.lhs, self.rhs)
+		return "{} -> {}".format(self.lhs, "".join(self.rhs))
