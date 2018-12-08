@@ -11,7 +11,7 @@ class TestFirst(unittest.TestCase):
             scanner.SymbolRule("[ \n]", "whitespace", add_symbol=False)
         ]
         
-        with open("scan.log", "r") as infile:
+        with open("test_input/scan.log", "r") as infile:
             symbols = scanner.scan(infile, rules)
 
         expected = [

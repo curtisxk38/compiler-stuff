@@ -242,7 +242,7 @@ def closure(closure_set, g):
     return closure_set
 
 def main():
-    g = grammar.Grammar("test3.cfg")
+    g = grammar.Grammar("test_input/test3.cfg")
     first = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first)
 

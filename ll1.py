@@ -97,7 +97,7 @@ def print_ast_digraph(root):
     return digraph
 
 def main():
-    g = grammar.Grammar("test2.cfg")
+    g = grammar.Grammar("test_input/test2.cfg")
     parse_table = construct_parse_table(g)
     ast = parse(parse_table, g, "aab$")
     print(print_ast_digraph(ast))
