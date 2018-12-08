@@ -72,13 +72,17 @@ def make_dfa(first, follow, g):
     new_rule = grammar.Rule({"L":new_start, "R":[old_start]})
     g.rules.append(new_rule)
 
+    # the kernel is the new rule just added with the dist marker at the beginning
     kernel = DistRule(g.rules[-1],0)
     start_items = closure(set([kernel]), g)
     start_items = tuple(start_items)
     
+    # set of states (each state is a tuple of distinguished rules)
     lr0_items = set([start_items])
+    # also store transitions
     transitions = []
 
+    # the core logic of making all the states
     while True:
         old_size = len(lr0_items)
         to_add = []
@@ -91,6 +95,9 @@ def make_dfa(first, follow, g):
         lr0_items.update(to_add)
         if old_size == len(lr0_items):
             break
+    
+    # now turn it into the data structures we want
+
     items_to_states = {}
     for items in lr0_items:
         if items not in items_to_states:
