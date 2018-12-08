@@ -19,14 +19,12 @@ class Symbol:
     def __repr__(self):
         return "{}<{}> at ({},{})".format(self.token, self.lexeme,self.line,self.col)
 
-rules = [
-    SymbolRule("def", "function def"), 
-    SymbolRule("[a-zA-z]+", "id"),
-    SymbolRule("[ \n]", "whitespace", add_symbol=False)
-]
+    def __eq__(self, other):
+        if not isinstance(other, Symbol):
+            return False
+        return self.__dict__ == other.__dict__
 
-
-def scan(f_iter):
+def scan(f_iter, rules):
     """
     won't be able to scan tokens that are multiline tokens
     tok_map => map token_num (int) to a (str)
@@ -60,12 +58,17 @@ def scan(f_iter):
             col_num += max_match_len
             line = line[max_match_len:]
 
-    print(symbols)
+    return symbols
 
 
 def main():
-    with open(sys.argv[1], "r") as infile:
-        scan(infile)
+    rules = [
+        SymbolRule("def", "function def"), 
+        SymbolRule("[a-zA-z]+", "id"),
+        SymbolRule("[ \n]", "whitespace", add_symbol=False)
+    ]
+    with open("scan.log", "r") as infile:
+        print(scan(infile, rules))
 
 
 if __name__ == "__main__":
