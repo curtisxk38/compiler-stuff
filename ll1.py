@@ -79,6 +79,7 @@ def parse(parse_table, g, to_parse):
                             cleaning_ast = False
                             break # break out of for loop
                 ast_stack.append(parent)
+    
     return ast_stack[0]
 
 def print_ast_digraph(root):
