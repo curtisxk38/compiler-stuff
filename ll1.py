@@ -82,26 +82,11 @@ def parse(parse_table, g, to_parse):
     
     return ast_stack[0]
 
-def print_ast_digraph(root):
-    digraph = "digraph G {\n"
-    unexamined = [root]
-    digraph += "\t\"\" [shape=none];\n"
-    while len(unexamined) > 0:
-        look_at = unexamined.pop()
-        # for root
-        if look_at.parent is None:
-            digraph += "\t\"{}\" -> \"{}\";\n".format("", look_at.for_digraph())
-        else:
-            digraph += "\t\"{}\" -> \"{}\";\n".format(look_at.parent.for_digraph(), look_at.for_digraph())
-        unexamined.extend(look_at.children)
-    digraph += "}"
-    return digraph
-
 def main():
     g = grammar.Grammar("test_input/test2.cfg")
     parse_table = construct_parse_table(g)
     ast = parse(parse_table, g, "aab$")
-    print(print_ast_digraph(ast))
+    print(ast.gen_ast_digraph())
 
 if __name__ == "__main__":
     main()

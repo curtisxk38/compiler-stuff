@@ -1,5 +1,7 @@
 import first_follow
 import grammar
+import ast
+
 
 class DFA:
     def __init__(self, states, transitions, start_state):
@@ -62,6 +64,9 @@ class DistRule:
         rhs_with_dist = self.rule.rhs[:]
         rhs_with_dist.insert(self.dist_pos, ".")
         return "{} -> {}".format(self.rule.lhs, "".join(rhs_with_dist))
+
+class ParseError(Exception):
+    pass
 
 def make_dfa(first, follow, g):
     # augment grammar
@@ -178,10 +183,12 @@ def make_parse_table(dfa, follow, g):
                     construction_table_error(action, index, len(action[index])-1, "accept")
     return action, goto_table
 
-def parse(start_state, action_table, goto_table, input_string, g):
-    stack = [start_state]
+def parse(dfa, action_table, goto_table, input_string, g):
+    start_state = dfa.states.index(dfa.start_state)
+    parse_stack = [start_state]
+    ast_stack = []
     while True:
-        current_state = stack[-1]
+        current_state = parse_stack[-1]
         try:
             sym = g.term.index(input_string[0])
         except ValueError:
@@ -190,28 +197,39 @@ def parse(start_state, action_table, goto_table, input_string, g):
         
         action = action_table[current_state][sym]
         
-        if action == "accept":
+        if action is None:
+            raise ParseError("No valid action for state {} and symbol {}".format(dfa.states[current_state], g.term[sym]))
+        elif action == "accept":
             break
         elif action[0] == "s":
             # shift
             next_state = int(action[1])
-            stack.append(next_state)
+            parse_stack.append(next_state)
             # take sym out of input
             input_string = input_string[1:]
+            # build ast
+            ast_stack.append(ast.ASTNode(g.term[sym], 0))
         elif action[0] == "r":
             reduce_rule = g.rules[int(action[1])]
-            to_pop = len(reduce_rule.rhs)
-            for i in range(to_pop):
-                stack.pop()
-            exposed_state = stack[-1]
+            print(reduce_rule)
+
+            reduce_len = len(reduce_rule.rhs)
+            # new AST node
+            new_node = ast.ASTNode(reduce_rule.lhs, reduce_len)
+            for i in range(reduce_len - 1, -1, -1):
+                parse_stack.pop()
+                child = ast_stack.pop()
+                child.parent = new_node
+                new_node.children[i] = child
+            ast_stack.append(new_node)
+
+            exposed_state = parse_stack[-1]
             # symbol you reduce to
             lhs_symbol = g.nonterm.index(reduce_rule.lhs)
             next_state = goto_table[exposed_state][lhs_symbol]
-            stack.append(next_state)
-            print(reduce_rule)
-        else:
-            raise ValueError("No valid action for state {} and symbol {}".format(current_state, sym))
-
+            parse_stack.append(next_state)
+    return ast_stack[0]
+            
 def goto(dist_rules, sym, g):
     new_items = []
     for dist_rule in dist_rules:
@@ -252,8 +270,8 @@ def main():
     #print(action)
     #print(goto_table)
 
-    start_state = dfa.states.index(dfa.start_state)
-    parse(start_state, action, goto_table, "(a)$", g)
+    ast = parse(dfa, action, goto_table, "(a(a((a))))$", g)
+    print(ast.gen_ast_digraph())
 
 if __name__ == "__main__":
     main()
