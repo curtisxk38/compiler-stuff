@@ -7,7 +7,7 @@ import slr1
 
 class TestClosure(unittest.TestCase):
     def test_clos1(self):
-    	g = grammar.Grammar("test_input/test3.cfg")
+    	g = grammar.Grammar(json_file="test_input/test3.cfg")
 
 
     	kernel = slr1.DistRule(g.rules[0],0)
@@ -18,7 +18,7 @@ class TestClosure(unittest.TestCase):
     	self.assertEqual(closure, expected)
 
     def test_goto1(self):
-    	g = grammar.Grammar("test_input/test3.cfg")
+    	g = grammar.Grammar(json_file="test_input/test3.cfg")
     	kernel = slr1.DistRule(g.rules[0],0)
     	closure = slr1.closure(set([kernel]), g)
 

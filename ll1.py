@@ -37,17 +37,18 @@ def construct_parse_table(g):
 
     return parse_table
 
-def parse(parse_table, g, to_parse):
+def parse(parse_table, g, tokens):
     parse_stack = ["$", g.start]
     ast_stack = []
     while True:
         try:
-            first_sym = to_parse[0]
+            first_sym = tokens[0]
+            first_tok = first_sym.token
         except IndexError:
             break
         top = parse_stack.pop()
         if top in g.nonterm:
-            next_rule = parse_table[g.nonterm.index(top)][g.term.index(first_sym)]
+            next_rule = parse_table[g.nonterm.index(top)][g.term.index(first_tok)]
         
             print(next_rule)
             # build AST
@@ -60,7 +61,7 @@ def parse(parse_table, g, to_parse):
             if top == "":
                 top = "(empty string)"
             print("terminal: {}".format(top))
-            to_parse = to_parse[1:]
+            tokens = tokens[1:]
             leaf = ast.ASTNode(top, 0)
             ast_stack.append(leaf)
             cleaning_ast = True
@@ -83,9 +84,11 @@ def parse(parse_table, g, to_parse):
     return ast_stack[0]
 
 def main():
-    g = grammar.Grammar("test_input/test2.cfg")
+    import scanner
+    g = grammar.Grammar(json_file="test_input/test2.cfg")
     parse_table = construct_parse_table(g)
-    ast = parse(parse_table, g, "aab$")
+    tokens = scanner.dummy_tokenize("aab$")
+    ast = parse(parse_table, g, tokens)
     print(ast.gen_ast_digraph())
 
 if __name__ == "__main__":

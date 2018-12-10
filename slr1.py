@@ -68,8 +68,11 @@ class DistRule:
 class ParseError(Exception):
     pass
 
-def make_dfa(first, follow, g):
-    # augment grammar
+def augment_grammar(g):
+    """
+    augment grammar g by adding new rule, S' -> S, where S was start symbol of g
+    changes g in place
+    """
     new_start = g.start + "'"
     old_start = g.start
     g.start = new_start
@@ -77,7 +80,8 @@ def make_dfa(first, follow, g):
     new_rule = grammar.Rule({"L":new_start, "R":[old_start]})
     g.rules.append(new_rule)
 
-    # the kernel is the new rule just added with the dist marker at the beginning
+def make_dfa(first, follow, g):
+    # the kernel is the new rule just added (by augmenting) with the dist marker at the beginning
     kernel = DistRule(g.rules[-1],0)
     start_items = closure(set([kernel]), g)
     start_items = tuple(start_items)
@@ -155,7 +159,10 @@ def make_parse_table(dfa, follow, g):
             else:
                 # sym is nonterm
                 col_index = g.nonterm.index(sym)
-                goto_table[index][col_index] = dfa.states.index(end_state)
+                if goto_table[index][col_index] is None:
+                    goto_table[index][col_index] = dfa.states.index(end_state)
+                else:
+                    raise ValueError("Goto already defined")
         
         for dist_rule in state.dist_rules:
             # create reduce for action table
@@ -183,18 +190,22 @@ def make_parse_table(dfa, follow, g):
                     construction_table_error(action, index, len(action[index])-1, "accept")
     return action, goto_table
 
-def parse(dfa, action_table, goto_table, input_string, g):
+def parse(dfa, action_table, goto_table, tokens, g):
     start_state = dfa.states.index(dfa.start_state)
     parse_stack = [start_state]
     ast_stack = []
     while True:
         current_state = parse_stack[-1]
+        token_symbol = tokens[0]
         try:
-            sym = g.term.index(input_string[0])
+            sym = g.term.index(token_symbol.token)
         except ValueError:
             # sym is $
             sym = -1
         
+        print("state: {}, sym: {}".format(current_state, sym))
+        print(token_symbol)
+
         action = action_table[current_state][sym]
         
         if action is None:
@@ -203,10 +214,10 @@ def parse(dfa, action_table, goto_table, input_string, g):
             break
         elif action[0] == "s":
             # shift
-            next_state = int(action[1])
+            next_state = int(action[1:])
             parse_stack.append(next_state)
             # take sym out of input
-            input_string = input_string[1:]
+            tokens = tokens[1:]
             # build ast
             ast_stack.append(ast.ASTNode(g.term[sym], 0))
         elif action[0] == "r":
@@ -259,8 +270,28 @@ def closure(closure_set, g):
             break
     return closure_set
 
+def parse_input(g, tokens):
+    augment_grammar(g)
+    first = first_follow.get_first(g)
+    follow = first_follow.get_follow(g, first)
+
+    print(first)
+    print(follow)
+
+    dfa = make_dfa(first, follow, g)
+    #print(dfa.generate_dot_file())
+    action, goto_table = make_parse_table(dfa, follow, g)
+    #print(action)
+    #print(goto_table)
+
+    ast = parse(dfa, action, goto_table, tokens, g)
+
+    return ast
+
 def main():
-    g = grammar.Grammar("test_input/test3.cfg")
+    import scanner
+    g = grammar.Grammar(json_file="test_input/test3.cfg")
+    augment_grammar(g)
     first = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first)
 
@@ -270,7 +301,8 @@ def main():
     #print(action)
     #print(goto_table)
 
-    ast = parse(dfa, action, goto_table, "(a(a((a))))$", g)
+    tokens = scanner.dummy_tokenize("(a(a((a))))$")
+    ast = parse(dfa, action, goto_table, tokens, g)
     print(ast.gen_ast_digraph())
 
 if __name__ == "__main__":

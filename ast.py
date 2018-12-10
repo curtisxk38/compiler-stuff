@@ -2,19 +2,17 @@ import collections
 
 
 class ASTNode:
-    def __init__(self, lexeme, num_children):
-        self.lexeme = lexeme
+    def __init__(self, node_type, num_children, symbol=None):
+        self.node_type = node_type
         self.children = [None] * num_children
         self.parent = None
+        self.symbol = symbol
 
     def __repr__(self):
         if len(self.children) == 0:
-            return self.lexeme
+            return self.node_type
         else:
-            return "{}: {}".format(self.lexeme, self.children)
-
-    def for_digraph(self):
-        return "{} - {}".format(self.lexeme, hex(id(self)))
+            return "{}: {}".format(self.node_type, self.children)
 
     def gen_ast_digraph(self):
         """
@@ -30,7 +28,7 @@ class ASTNode:
             look_at = unexamined.popleft()
             if look_at not in node_to_id:
                 node_to_id[look_at] = counter
-                digraph += "\t{} [ label=\"{}\" ];\n".format(counter, look_at.lexeme)
+                digraph += "\t{} [ label=\"{}\" ];\n".format(counter, look_at.node_type)
                 counter += 1
             # for root
             if look_at.parent is None:

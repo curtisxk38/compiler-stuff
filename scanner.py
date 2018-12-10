@@ -60,6 +60,12 @@ def scan(f_iter, rules):
 
     return symbols
 
+def dummy_tokenize(input_str):
+    """
+    turn a string into a list of dummy symbols
+    need list of symbols to parse
+    """
+    return [Symbol(char, char, -1, -1, -1) for char in list(input_str)]
 
 def main():
     rules = [
