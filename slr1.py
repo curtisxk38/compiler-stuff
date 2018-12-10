@@ -202,10 +202,6 @@ def parse(dfa, action_table, goto_table, tokens, g):
         except ValueError:
             # sym is $
             sym = -1
-        
-        print("state: {}, sym: {}".format(current_state, sym))
-        print(token_symbol)
-
         action = action_table[current_state][sym]
         
         if action is None:
@@ -275,11 +271,8 @@ def parse_input(g, tokens):
     first = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first)
 
-    print(first)
-    print(follow)
-
     dfa = make_dfa(first, follow, g)
-    #print(dfa.generate_dot_file())
+    print(dfa.generate_dot_file())
     action, goto_table = make_parse_table(dfa, follow, g)
     #print(action)
     #print(goto_table)
