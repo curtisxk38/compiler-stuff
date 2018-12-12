@@ -49,6 +49,10 @@ grammar_dict = {
             "L": "expression",
             "R": ["expression", "times", "expression"]
         },
+        {
+            "L": "expression",
+            "R": ["left_paren", "expression", "right_paren"]
+        },
 
     ]
 }

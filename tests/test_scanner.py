@@ -3,7 +3,7 @@ import unittest
 import scanner
 
 
-class TestFirst(unittest.TestCase):
+class TestScanner(unittest.TestCase):
     def test_scanner1(self):
         rules = [
             scanner.SymbolRule("def", "function def"), 

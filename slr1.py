@@ -65,7 +65,28 @@ class DistRule:
         rhs_with_dist.insert(self.dist_pos, ".")
         return "{} -> {}".format(self.rule.lhs, "".join(rhs_with_dist))
 
-class ParseError(Exception):
+class Error(Exception):
+    """
+    Base class for exceptions in this module
+    """
+    pass
+
+class ParseError(Error):
+    """
+    exception raised on parsing an input string that can't be made with the given grammar
+    """
+    pass
+
+class ShiftReduceError(Error):
+    """
+    conflict in creating parse table: don't know whether to shift or reduce
+    """
+    pass
+
+class ReduceReduceError(Error):
+    """
+    conflict in creating parse table: don't know which rule to reduce by
+    """
     pass
 
 def augment_grammar(g):
@@ -136,9 +157,15 @@ def make_dfa(first, follow, g):
     return DFA(states, actual_transitions, start_state)
 
 def construction_table_error(table, index, col_index, new_rule):
+    old_rule = table[index][col_index]
     print("Tried to put {} where {} already exists".format(new_rule, table[index][col_index]))
+    if old_rule[0] == "r" and new_rule[0] == "r":
+        raise ReduceReduceError("Reduce/Reduce error between states {} and {}".format(old_rule[1:], new_rule[1:]))
+    if old_rule[0] == "s" and new_rule[0] == "r":
+        raise ShiftReduceError("Shift/Reduce error: shift to state {}, reduce by rule {}".format(old_rule[1:], new_rule[1:]))
+    if old_rule[0] == "r" and new_rule[0] == "s":
+        raise ShiftReduceError("Shift/Reduce error: shift to state {}, reduce by rule {}".format(new_rule[1:], old_rule[1:]))    
     raise ValueError("Not SLR1, multiple entries for action[{}][{}]".format(index, col_index))
-
 
 def make_parse_table(dfa, follow, g):
     # + 1 to the number of terminals because we need $ in the table
@@ -291,8 +318,8 @@ def main():
     dfa = make_dfa(first, follow, g)
     #print(dfa.generate_dot_file())
     action, goto_table = make_parse_table(dfa, follow, g)
-    #print(action)
-    #print(goto_table)
+    print(action)
+    print(goto_table)
 
     tokens = scanner.dummy_tokenize("(a(a((a))))$")
     ast = parse(dfa, action, goto_table, tokens, g)

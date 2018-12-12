@@ -61,6 +61,7 @@ def base_first(first, g):
         # sym is non terminal and sym -> "", so first[sym] has ""
         elif {"L":sym,"R":[""]} in g.rules:
             first[sym].add("")
+    first["$"] = set(["$"])
 
 def get_first(g):
     first = {k: set() for k in g.all_symbols()}
@@ -103,6 +104,21 @@ def get_first(g):
             break
 
     return first
+
+def first_of_string(first_set, input_list):
+    result = set()
+    for i in input_list:
+        to_add = first_set[i].copy()
+        if "" not in to_add:
+            result.update(to_add)
+            return result
+        else:
+            to_add.remove("")
+            result.update(to_add)
+    # if the whole for loop executes, that means every symbol in the input
+    #  contained the empty string "", so the first of the input also contains ""
+    result.add("")
+    return result
 
 def main():
     g = grammar.Grammar(json_file="test.json")
