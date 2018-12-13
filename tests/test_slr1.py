@@ -3,6 +3,7 @@ import unittest
 import first_follow
 import grammar
 import slr1
+import lr_parse_common
 
 
 class TestSLR1(unittest.TestCase):
@@ -11,7 +12,7 @@ class TestSLR1(unittest.TestCase):
 
 
         kernel = slr1.LR0Item(g.rules[0],0)
-        closure = slr1.closure(set([kernel]), g)
+        closure = slr1.closure(set([kernel]), g, None)
 
         expected = set([kernel, slr1.LR0Item(g.rules[1], 0), slr1.LR0Item(g.rules[2], 0)])
 
@@ -20,9 +21,9 @@ class TestSLR1(unittest.TestCase):
     def test_goto1(self):
         g = grammar.Grammar(json_file="test_input/test3.cfg")
         kernel = slr1.LR0Item(g.rules[0],0)
-        closure = slr1.closure(set([kernel]), g)
+        items = slr1.closure(set([kernel]), g, None)
 
-        new_items = slr1.goto(closure, "(", g)
+        new_items = lr_parse_common.goto(slr1.closure, items, "(", g, None)
 
         expected = set([
             slr1.LR0Item(g.rules[1],1),
@@ -36,11 +37,12 @@ class TestSLR1(unittest.TestCase):
 
     def test_make_table(self):
         g = grammar.Grammar(json_file="test_input/test3.cfg")
-        slr1.augment_grammar(g)
+        lr_parse_common.augment_grammar(g)
         first = first_follow.get_first(g)
         follow = first_follow.get_follow(g, first)
 
-        dfa = slr1.make_dfa(first, follow, g)
+        kernel = slr1.LR0Item(g.rules[-1], 0)
+        dfa = lr_parse_common.make_dfa(g, slr1.closure, kernel, first)
 
         action, goto_table = slr1.make_parse_table(dfa, follow, g)
         
@@ -75,12 +77,13 @@ class TestSLR1(unittest.TestCase):
 
     def test_not_slr1_grammar(self):
         g = grammar.Grammar(json_file="test_input/test4.cfg")
-        slr1.augment_grammar(g)
+        lr_parse_common.augment_grammar(g)
         first = first_follow.get_first(g)
         follow = first_follow.get_follow(g, first)
 
-        dfa = slr1.make_dfa(first, follow, g)
+        kernel = slr1.LR0Item(g.rules[-1], 0)
+        dfa = lr_parse_common.make_dfa(g, slr1.closure, kernel, first)
 
-        with self.assertRaises(slr1.ShiftReduceError):
+        with self.assertRaises(lr_parse_common.ShiftReduceError):
             action, goto_table = slr1.make_parse_table(dfa, follow, g)
 

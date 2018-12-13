@@ -2,14 +2,14 @@ import unittest
 
 import first_follow
 import grammar
-import slr1
+import lr_parse_common
 from canonicallr1 import closure, LR1Item
 
 
 class TestCanonical(unittest.TestCase):
     def test_clos1(self):
         g = grammar.Grammar(json_file="test_input/test5.cfg")
-        slr1.augment_grammar(g)
+        lr_parse_common.augment_grammar(g)
         kernel = set()
         initial = LR1Item(g.rules[-1], 0, "$")
         kernel.add(initial)

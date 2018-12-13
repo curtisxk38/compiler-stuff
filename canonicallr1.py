@@ -1,6 +1,6 @@
 import first_follow
 import grammar
-import slr1
+import lr_parse_common
 
 class LR1Item:
     def __init__(self, rule, dist_pos, look_ahead):
@@ -29,30 +29,29 @@ class LR1Item:
         return "[{} -> {}, {}]".format(self.rule.lhs, "".join(rhs_with_dist), self.look_ahead)
 
 def closure(closure_set, g, first_set):
-    # modifies closure_set in place
+    # modifies closure_set in place and returns it
     while True:
         to_add = []
         old_size = len(closure_set)
 
         for item in closure_set:
-            # item = [A -> alpha . B beta, a]
-            alpha = item.rule.rhs[:item.dist_pos]
-            B = item.rule.rhs[item.dist_pos]
-            beta = item.rule.rhs[item.dist_pos+1:]
-            # for each terminal b in FIRST(beta a)
-            #  add [B -> . gamma, b] if it isn't in closure_set already
-            #  B -> gamma is any rule with B on the lhs
-            firsts = first_follow.first_of_string(first_set, beta + [item.look_ahead])
-            for b in firsts:
-                to_add.extend([LR1Item(rule, 0, b) for rule in g.rules if rule.lhs == B])
+            if item.dist_pos < len(item.rule.rhs):
+                # item = [A -> alpha . B beta, a]
+                alpha = item.rule.rhs[:item.dist_pos]
+                B = item.rule.rhs[item.dist_pos]
+                beta = item.rule.rhs[item.dist_pos+1:]
+                # for each terminal b in FIRST(beta a)
+                #  add [B -> . gamma, b] if it isn't in closure_set already
+                #  B -> gamma is any rule with B on the lhs
+                firsts = first_follow.first_of_string(first_set, beta + [item.look_ahead])
+                for b in firsts:
+                    to_add.extend([LR1Item(rule, 0, b) for rule in g.rules if rule.lhs == B])
 
         closure_set.update(to_add)
         if len(closure_set) == old_size:
             # didn't add anything new this cycle
             break
-
-def make_dfa(first, follow, g):
-    pass
+    return closure_set
 
 def make_parse_table(dfa, follow, g):
     pass
@@ -60,12 +59,11 @@ def make_parse_table(dfa, follow, g):
 
 def main():
     g = grammar.Grammar(json_file="test_input/test5.cfg")
-    slr1.augment_grammar(g)
-    kernel = set()
-    kernel.add(LR1Item(g.rules[-1], 0, "$"))
+    lr_parse_common.augment_grammar(g)
+    kernel = LR1Item(g.rules[-1], 0, "$")
     first_set = first_follow.get_first(g)
-    closure(kernel, g, first_set)
-    print(kernel)
+    dfa = lr_parse_common.make_dfa(g, closure, kernel, first_set)
+    print(dfa.generate_dot_file())
 
 if __name__ == "__main__":
     main()
