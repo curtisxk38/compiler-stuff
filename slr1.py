@@ -33,13 +33,20 @@ class DFA:
 class State:
     def __init__(self, dist_rules, is_start):
         self.dist_rules = list(dist_rules)
+        self.items = dist_rules
         self.transitions = {}
         self.is_start = is_start
 
     def __repr__(self):
         return str(self.dist_rules)
 
-class DistRule:
+    def __eq__(self, other):
+        return self.dist_rules == other.dist_rules
+
+    def __hash__(self):
+        return hash(tuple(self.items))
+
+class LR0Item:
     """
     class for a distinguished rule
     """
@@ -50,9 +57,9 @@ class DistRule:
         self.dist_pos = dist_pos
 
     def advance(self):
-        # return new DistRule that is this DistRule
+        # return new LR0Item that is this LR0Item
         #   with the distinguished marker advanced one spot
-        return DistRule(self.rule, self.dist_pos+1)
+        return LR0Item(self.rule, self.dist_pos+1)
 
     def __eq__(self, other):
         return self.rule == other.rule and self.dist_pos == other.dist_pos
@@ -103,58 +110,36 @@ def augment_grammar(g):
 
 def make_dfa(first, follow, g):
     # the kernel is the new rule just added (by augmenting) with the dist marker at the beginning
-    kernel = DistRule(g.rules[-1],0)
-    start_items = closure(set([kernel]), g)
-    start_items = tuple(start_items)
-    
-    # set of states (each state is a tuple of distinguished rules)
-    lr0_items = set([start_items])
-    # also store transitions
+    kernel = LR0Item(g.rules[-1], 0)
+    start_state = State(closure(set([kernel]), g), True)
+
+    states = [start_state]
+    look_up = set([start_state])
     transitions = []
 
-    # the core logic of making all the states
     while True:
-        old_size = len(lr0_items)
-        to_add = []
-        for items in lr0_items:
+        old_size = len(states)
+        changes_made = False
+        for state in states:
             for sym in g.all_symbols():
-                new_items = tuple(goto(items, sym, g))
+                new_items = goto(state.items, sym, g)
                 if len(new_items) > 0:
-                    transitions.append((items, new_items, sym))
-                    to_add.append(new_items)
-        lr0_items.update(to_add)
-        if old_size == len(lr0_items):
+                    new_state = State(new_items, False)
+                    if new_state not in look_up:
+                        look_up.add(new_state)
+                        states.append(new_state)
+                    # even if new_state is already in states,
+                    #  this iteration through the sym for loop gives us a new transiiton
+                    transitions.append([state, new_state, sym])
+        if not changes_made:
             break
-    
-    # now turn it into the data structures we want
 
-    items_to_states = {}
-    for items in lr0_items:
-        if items not in items_to_states:
-            is_start = items == start_items
-            items_to_states[items] = State(items, is_start)
-    
-    actual_transitions = []
+    # update each state so it has its own transitions
     for transition in transitions:
-        start, end, sym = transition
-        start_state = items_to_states[start]
-        end_state = items_to_states[end]
-        
-        # update each states' transitions
-        start_state.transitions[sym] = end_state
-        
-        # also save transitions
-        actual_t = [start_state, end_state, sym]
-        if actual_t not in actual_transitions:
-            actual_transitions.append(actual_t)
+        source, dest, sym = transition
+        source.transitions[sym] = dest
 
-    states = []
-    start_state = None
-    for _, state in items_to_states.items():
-        states.append(state)
-        if state.is_start:
-            start_state = state
-    return DFA(states, actual_transitions, start_state)
+    return DFA(states, transitions, states[0])
 
 def construction_table_error(table, index, col_index, new_rule):
     old_rule = table[index][col_index]
@@ -286,7 +271,7 @@ def closure(closure_set, g):
                 sym_after = dist_rule.rule.rhs[dist_rule.dist_pos]
                 for rule in g.rules:
                     if rule.lhs == sym_after:
-                        to_add.append(DistRule(rule, 0))
+                        to_add.append(LR0Item(rule, 0))
         # if we didn't add anything, we're done
         closure_set.update(to_add)
         if old_size == len(closure_set):
@@ -299,7 +284,7 @@ def parse_input(g, tokens):
     follow = first_follow.get_follow(g, first)
 
     dfa = make_dfa(first, follow, g)
-    print(dfa.generate_dot_file())
+    #print(dfa.generate_dot_file())
     action, goto_table = make_parse_table(dfa, follow, g)
     #print(action)
     #print(goto_table)
@@ -316,14 +301,14 @@ def main():
     follow = first_follow.get_follow(g, first)
 
     dfa = make_dfa(first, follow, g)
-    #print(dfa.generate_dot_file())
+    print(dfa.generate_dot_file())
     action, goto_table = make_parse_table(dfa, follow, g)
     print(action)
     print(goto_table)
 
     tokens = scanner.dummy_tokenize("(a(a((a))))$")
     ast = parse(dfa, action, goto_table, tokens, g)
-    print(ast.gen_ast_digraph())
+    #print(ast.gen_ast_digraph())
 
 if __name__ == "__main__":
     main()
