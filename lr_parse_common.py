@@ -138,6 +138,49 @@ def goto(closure, items, sym, g, first_set):
                 new_items.append(item.advance())
     return closure(set(new_items), g, first_set)
 
+def handle_conflict(action, state_index, col_index, new_rule, g):
+    # try to resolve conflict with associativity / precedence
+    old_rule = action[state_index][col_index]
+    previous_action = old_rule[0]
+    new_action = new_rule[0]
+    # the symbol that there is a conflict on
+    conflict_sym = g.term[col_index]
+    if previous_action == "s" and new_action == "r":
+        # shift / reduce error
+        # conflict_sym is what caused the old shift
+        reduce_rule = g.rules[int(new_rule[1:])]
+        reduce_prec = 0
+        try:
+            shift_prec = g.prec[conflict_sym]
+        except KeyError:
+            shift_prec = 0
+        for s in reduce_rule.rhs[::-1]:
+            if s in g.prec:
+                reduce_prec = g.prec[s]
+                break
+        if shift_prec < reduce_prec:
+            # resolve in favor of reduce
+            action[state_index][col_index] = new_rule
+        elif shift_prec == reduce_prec:
+            # they had equal precedence, try associativity
+            resolved = False
+            for s in reduce_rule.rhs[::-1]:
+                if s in g.assoc:
+                    if g.assoc[s] == "left":
+                        # resolve in favor of reduce
+                        action[state_index][col_index] = new_rule
+                    # else, resolve in favor of shift
+                    #  (keep old entry in action table)
+                    resolved = True
+                    break
+            if not resolved:
+                construction_table_error(action, state_index, col_index, new_rule)
+        # else, resolve in favor of shift
+        #  (keep old entry in action table)
+
+    else:
+        raise NotImplementedError("how to handle reduce/reduce conflict with associativity/precedence?")
+    
 
 
 def parse(dfa, action_table, goto_table, tokens, g):

@@ -13,6 +13,15 @@ class Grammar:
         self.start = grammar_dict["start"]
         self.nonterm = grammar_dict["nonterm"]
         self.term = grammar_dict["term"]
+        # add associativity and precedence
+        if "prec" in grammar_dict:
+            self.prec = grammar_dict["prec"]
+        else:
+            self.prec = {}
+        if "assoc" in grammar_dict:
+            self.assoc = grammar_dict["assoc"]
+        else:
+            self.assoc = {}
 
     def all_symbols(self):
         return self.nonterm + self.term

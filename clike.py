@@ -2,7 +2,9 @@ import sys
 
 import scanner
 import grammar
+import lr_parse_common
 import slr1
+import first_follow
 
 rules = [
     scanner.SymbolRule("int", "int_type"), 
@@ -54,7 +56,9 @@ grammar_dict = {
             "R": ["left_paren", "expression", "right_paren"]
         },
 
-    ]
+    ],
+    "assoc": {"plus":"left","minus":"left","times":"left",},
+    "prec":{"times":1}
 }
 
 def main(fname):
@@ -63,7 +67,14 @@ def main(fname):
     tokens.append(scanner.Symbol("$", "EOF", -1, -1, -1))
     #print(tokens)
     g = grammar.Grammar(grammar_dict=grammar_dict)
-    ast = slr1.parse_input(g, tokens)
+
+    lr_parse_common.augment_grammar(g)
+    kernel = slr1.LR0Item(g.rules[-1], 0)
+    first_set = first_follow.get_first(g)
+    follow = first_follow.get_follow(g, first_set)
+    dfa = lr_parse_common.make_dfa(g, slr1.closure, kernel, first_set)
+    action, goto_table = slr1.make_parse_table(dfa, follow, g)
+    ast = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
     print(ast.gen_ast_digraph())
 
 if __name__ == "__main__":

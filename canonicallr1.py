@@ -87,7 +87,7 @@ def make_parse_table(dfa, follow, g):
                 if action[index][col_index] is None:
                     action[index][col_index] = new_rule
                 else:
-                    lr_parse_common.construction_table_error(action, index, col_index, new_rule)
+                    lr_parse_common.handle_conflict(action, index, col_index, new_rule, g)
             
             # create accept for action table
             # When we augmented the grammar, we added a new rule at the end of the rules list
