@@ -180,8 +180,6 @@ def handle_conflict(action, state_index, col_index, new_rule, g):
 
     else:
         raise NotImplementedError("how to handle reduce/reduce conflict with associativity/precedence?")
-    
-
 
 def parse(dfa, action_table, goto_table, tokens, g):
     start_state = dfa.states.index(dfa.start_state)
@@ -208,7 +206,7 @@ def parse(dfa, action_table, goto_table, tokens, g):
             # take sym out of input
             tokens = tokens[1:]
             # build ast
-            ast_stack.append(ast.ASTNode(g.term[sym], 0))
+            ast_stack.append(ast.ASTNode(g.term[sym], 0, symbol=token_symbol))
         elif action[0] == "r":
             reduce_rule = g.rules[int(action[1])]
             print(reduce_rule)

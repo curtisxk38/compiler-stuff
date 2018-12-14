@@ -9,10 +9,7 @@ class ASTNode:
         self.symbol = symbol
 
     def __repr__(self):
-        if len(self.children) == 0:
-            return self.node_type
-        else:
-            return "{}: {}".format(self.node_type, self.children)
+       return self.node_type
 
     def gen_ast_digraph(self):
         """

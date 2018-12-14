@@ -5,6 +5,8 @@ import grammar
 import lr_parse_common
 import slr1
 import first_follow
+import visit
+import gen_ir
 
 rules = [
     scanner.SymbolRule("int", "int_type"), 
@@ -76,6 +78,9 @@ def main(fname):
     action, goto_table = slr1.make_parse_table(dfa, follow, g)
     ast = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
     print(ast.gen_ast_digraph())
+    gen_code = gen_ir.CodeGenVisitor(ast)
+    gen_code.accept()
+    print(gen_code.code)
 
 if __name__ == "__main__":
     main(sys.argv[1])
