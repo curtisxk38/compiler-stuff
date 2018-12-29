@@ -6,7 +6,7 @@ import grammar
 
 class TestLL1(unittest.TestCase):
     def test_ll1(self):
-        g = grammar.Grammar(json_file="test_input/test2.cfg")
+        g = grammar.make_dummy_grammar("test_input/test2.cfg")
         expected = [
             [g.rules[0], g.rules[0], g.rules[0], g.rules[0], None],
             [g.rules[1], g.rules[1], g.rules[2], g.rules[2], g.rules[2]],

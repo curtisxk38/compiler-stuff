@@ -85,7 +85,7 @@ def parse(parse_table, g, tokens):
 
 def main():
     import scanner
-    g = grammar.Grammar(json_file="test_input/test2.cfg")
+    g = grammar.make_dummy_grammar("test_input/test2.cfg")
     parse_table = construct_parse_table(g)
     tokens = scanner.dummy_tokenize("aab$")
     ast = parse(parse_table, g, tokens)

@@ -8,7 +8,7 @@ import lr_parse_common
 
 class TestSLR1(unittest.TestCase):
     def test_clos1(self):
-        g = grammar.Grammar(json_file="test_input/test3.cfg")
+        g = grammar.make_dummy_grammar("test_input/test3.cfg")
 
 
         kernel = slr1.LR0Item(g.rules[0],0)
@@ -19,7 +19,7 @@ class TestSLR1(unittest.TestCase):
         self.assertEqual(closure, expected)
 
     def test_goto1(self):
-        g = grammar.Grammar(json_file="test_input/test3.cfg")
+        g = grammar.make_dummy_grammar("test_input/test3.cfg")
         kernel = slr1.LR0Item(g.rules[0],0)
         items = slr1.closure(set([kernel]), g, None)
 
@@ -36,7 +36,7 @@ class TestSLR1(unittest.TestCase):
         self.assertEqual(new_items, expected)
 
     def test_make_table(self):
-        g = grammar.Grammar(json_file="test_input/test3.cfg")
+        g = grammar.make_dummy_grammar("test_input/test3.cfg")
         lr_parse_common.augment_grammar(g)
         first = first_follow.get_first(g)
         follow = first_follow.get_follow(g, first)
@@ -76,7 +76,7 @@ class TestSLR1(unittest.TestCase):
 
 
     def test_not_slr1_grammar(self):
-        g = grammar.Grammar(json_file="test_input/test4.cfg")
+        g = grammar.make_dummy_grammar("test_input/test4.cfg")
         lr_parse_common.augment_grammar(g)
         first = first_follow.get_first(g)
         follow = first_follow.get_follow(g, first)

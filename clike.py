@@ -68,7 +68,7 @@ def main(fname):
         tokens = scanner.scan(infile, rules)
     tokens.append(scanner.Symbol("$", "EOF", -1, -1, -1))
     #print(tokens)
-    g = grammar.Grammar(grammar_dict=grammar_dict)
+    g = grammar.Grammar(grammar_dict)
 
     lr_parse_common.augment_grammar(g)
     kernel = slr1.LR0Item(g.rules[-1], 0)

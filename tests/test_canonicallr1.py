@@ -8,7 +8,7 @@ from canonicallr1 import closure, LR1Item
 
 class TestCanonical(unittest.TestCase):
     def test_clos1(self):
-        g = grammar.Grammar(json_file="test_input/test5.cfg")
+        g = grammar.make_dummy_grammar("test_input/test5.cfg")
         lr_parse_common.augment_grammar(g)
         kernel = set()
         initial = LR1Item(g.rules[-1], 0, "$")

@@ -1,11 +1,8 @@
 import json
 
 class Grammar:
-    def __init__(self, json_file=None, grammar_dict=None):
-        if json_file is not None:
-            with open(json_file, "r") as f:
-                    grammar_dict = json.load(f)
-
+    def __init__(self, grammar_dict):
+        self.grammar_dict = grammar_dict
         self.rules = []
         for rule in grammar_dict["rules"]:
         	self.rules.append(Rule(rule))
@@ -27,9 +24,15 @@ class Grammar:
         return self.nonterm + self.term
 
 class Rule:
-	def __init__(self, grammar_dict):
-		self.lhs = grammar_dict["L"]
-		self.rhs = grammar_dict["R"]
+	def __init__(self, rule_def):
+		self.lhs = rule_def[0]
+		self.rhs = rule_def[1]
 
 	def __repr__(self):
 		return "{} -> {}".format(self.lhs, "".join(self.rhs))
+
+def make_dummy_grammar(fname):
+    with open(fname, "r") as f:
+        grammar_dict = json.load(f)
+    g = Grammar(grammar_dict=grammar_dict)
+    return g

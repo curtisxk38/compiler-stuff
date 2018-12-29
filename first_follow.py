@@ -121,7 +121,7 @@ def first_of_string(first_set, input_list):
     return result
 
 def main():
-    g = grammar.Grammar(json_file="test.json")
+    g = grammar.make_dummy_grammar("test.json")
     first = get_first(g)
     print(first)
     follow = get_follow(g, first)

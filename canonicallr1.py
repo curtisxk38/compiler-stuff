@@ -102,7 +102,7 @@ def make_parse_table(dfa, follow, g):
 
 def main():
     import scanner
-    g = grammar.Grammar(json_file="test_input/test4.cfg")
+    g = grammar.make_dummy_grammar("test_input/test4.cfg")
     lr_parse_common.augment_grammar(g)
     kernel = LR1Item(g.rules[-1], 0, "$")
     first_set = first_follow.get_first(g)

@@ -95,7 +95,7 @@ def augment_grammar(g):
     old_start = g.start
     g.start = new_start
     g.nonterm.append(new_start)
-    new_rule = grammar.Rule({"L":new_start, "R":[old_start]})
+    new_rule = grammar.Rule([new_start, [old_start]])
     g.rules.append(new_rule)
 
 def make_dfa(g, closure, kernel, first_set):

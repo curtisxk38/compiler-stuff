@@ -105,7 +105,7 @@ def closure(closure_set, g, first_set):
 
 def main():
     import scanner
-    g = grammar.Grammar(json_file="test_input/test3.cfg")
+    g = grammar.make_dummy_grammar("test_input/test3.cfg")
     lr_parse_common.augment_grammar(g)
     first = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first)
