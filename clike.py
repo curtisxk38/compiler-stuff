@@ -27,7 +27,7 @@ rules = [
 
 grammar_dict = {
     "start": "program",
-    "nonterm": ["program", "expression"],
+    "nonterm": ["program", "expression", "return_exp"],
     "term": ["int_type","right_paren","left_paren",
              "left_brace","right_brace","semi",
              "return","main","int_literal","plus","minus","times"],
@@ -36,28 +36,38 @@ grammar_dict = {
             "program",
             ["int_type", "main", "left_paren", 
                   "right_paren", "left_brace", "return",
-                  "expression", "semi", "right_brace"
+                  "return_exp", "semi", "right_brace"
             ]
         ],
         [
-            "expression",
-            ["int_literal"]
+            "return_exp",
+            ["expression"],
+            lambda rule, children: ast.ASTNode("return_exp", children)
         ],
         [
             "expression",
-            ["expression", "plus", "expression"]
+            ["int_literal"],
+            lambda rule, children: ast.ASTNode("int_literal", [], symbol=children[0])
         ],
         [
             "expression",
-            ["expression", "minus", "expression"]
+            ["expression", "plus", "expression"],
+            lambda rule, children: ast.ASTNode("plus_exp", [children[0], children[2]])
         ],
         [
             "expression",
-            ["expression", "times", "expression"]
+            ["expression", "minus", "expression"],
+            lambda rule, children: ast.ASTNode("minus_exp", [children[0], children[2]])
         ],
         [
             "expression",
-            ["left_paren", "expression", "right_paren"]
+            ["expression", "times", "expression"],
+            lambda rule, children: ast.ASTNode("times_exp", [children[0], children[2]])
+        ],
+        [
+            "expression",
+            ["left_paren", "expression", "right_paren"],
+            lambda rule, children: children[0]
         ],
 
     ],
@@ -73,6 +83,11 @@ def main(fname):
     g = grammar.Grammar(grammar_dict)
 
     lr_parse_common.augment_grammar(g)
+
+    for rule in g.rules:
+        if rule.to_node is None:
+            rule.to_node = lambda rule, children: ast.ASTNode(rule.lhs, children)
+    
     kernel = slr1.LR0Item(g.rules[-1], 0)
     first_set = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first_set)
