@@ -26,6 +26,3 @@ class DFSVisitor:
 
     def default_out_visit(self, node):
         print("Exiting {}".format(node))
-
-    def default_visit(self, node):
-        print("Visiting {}".format(node))
