@@ -206,19 +206,19 @@ def parse(dfa, action_table, goto_table, tokens, g):
             # take sym out of input
             tokens = tokens[1:]
             # build ast
-            ast_stack.append(ast.ASTNode(g.term[sym], 0, symbol=token_symbol))
+            ast_stack.append(token_symbol)
         elif action[0] == "r":
             reduce_rule = g.rules[int(action[1])]
-            print(reduce_rule)
-
             reduce_len = len(reduce_rule.rhs)
-            # new AST node
-            new_node = ast.ASTNode(reduce_rule.lhs, reduce_len)
-            for i in range(reduce_len - 1, -1, -1):
-                parse_stack.pop()
-                child = ast_stack.pop()
-                child.parent = new_node
-                new_node.children[i] = child
+            # pop off states from parse stack
+            del parse_stack[-reduce_len:]
+            # get children of the new AST node from the ast stack
+            children = ast_stack[-reduce_len:]
+            # create new AST node
+            new_node = reduce_rule.to_node(reduce_rule, children)
+            # remove children from ast stack
+            ast_stack = ast_stack[:-reduce_len]
+            # push new ASTn node onto ast stack
             ast_stack.append(new_node)
 
             exposed_state = parse_stack[-1]

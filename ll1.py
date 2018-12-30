@@ -2,6 +2,17 @@ import first_follow
 import grammar
 import ast
 
+
+class LL1Node:
+    def __init__(self, node_type, num_children, symbol=None):
+        self.node_type = node_type
+        self.children = [None] * num_children
+        self.parent = None
+        self.symbol = symbol
+
+    def __repr__(self):
+       return self.node_type
+
 def construct_parse_table(g):
     first = first_follow.get_first(g)
     follow = first_follow.get_follow(g, first)
@@ -52,7 +63,7 @@ def parse(parse_table, g, tokens):
         
             print(next_rule)
             # build AST
-            ast_stack.append(ast.ASTNode(next_rule.lhs, len(next_rule.rhs)))
+            ast_stack.append(LL1Node(next_rule.lhs, len(next_rule.rhs)))
             
             for sym in next_rule.rhs[::-1]:
                 parse_stack.append(sym)
@@ -62,7 +73,7 @@ def parse(parse_table, g, tokens):
                 top = "(empty string)"
             print("terminal: {}".format(top))
             tokens = tokens[1:]
-            leaf = ast.ASTNode(top, 0)
+            leaf = LL1Node(top, 0)
             ast_stack.append(leaf)
             cleaning_ast = True
             # connect tree components
@@ -88,8 +99,8 @@ def main():
     g = grammar.make_dummy_grammar("test_input/test2.cfg")
     parse_table = construct_parse_table(g)
     tokens = scanner.dummy_tokenize("aab$")
-    ast = parse(parse_table, g, tokens)
-    print(ast.gen_ast_digraph())
+    ast_root = parse(parse_table, g, tokens)
+    print(ast.gen_ast_digraph(ast_root))
 
 if __name__ == "__main__":
     main()

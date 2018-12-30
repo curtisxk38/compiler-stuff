@@ -1,6 +1,7 @@
 import first_follow
 import grammar
 import lr_parse_common
+import ast
 
 class LR1Item:
     def __init__(self, rule, dist_pos, look_ahead):
@@ -112,8 +113,8 @@ def main():
     action, goto = make_parse_table(dfa, follow, g)
 
     tokens = scanner.dummy_tokenize("i=*i$")
-    ast = lr_parse_common.parse(dfa, action, goto, tokens, g)
-    print(ast.gen_ast_digraph())
+    ast_root = lr_parse_common.parse(dfa, action, goto, tokens, g)
+    print(ast.gen_ast_digraph(ast_root))
 
 if __name__ == "__main__":
     main()

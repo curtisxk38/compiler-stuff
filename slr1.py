@@ -119,8 +119,8 @@ def main():
     print(goto_table)
 
     tokens = scanner.dummy_tokenize("(a(a((a))))$")
-    ast = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
-    print(ast.gen_ast_digraph())
+    ast_root = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
+    print(ast.gen_ast_digraph(ast_root))
 
 if __name__ == "__main__":
     main()

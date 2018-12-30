@@ -7,6 +7,7 @@ import slr1
 import first_follow
 import visit
 import gen_ir
+import ast
 
 rules = [
     scanner.SymbolRule("int", "int_type"), 
@@ -31,32 +32,33 @@ grammar_dict = {
              "left_brace","right_brace","semi",
              "return","main","int_literal","plus","minus","times"],
     "rules": [
-        {
-            "L": "program",
-            "R": ["int_type", "main", "left_paren", 
+        [   
+            "program",
+            ["int_type", "main", "left_paren", 
                   "right_paren", "left_brace", "return",
-                  "expression", "semi", "right_brace"]
-        },
-        {
-            "L": "expression",
-            "R": ["int_literal"]
-        },
-        {
-            "L": "expression",
-            "R": ["expression", "plus", "expression"]
-        },
-        {
-            "L": "expression",
-            "R": ["expression", "minus", "expression"]
-        },
-        {
-            "L": "expression",
-            "R": ["expression", "times", "expression"]
-        },
-        {
-            "L": "expression",
-            "R": ["left_paren", "expression", "right_paren"]
-        },
+                  "expression", "semi", "right_brace"
+            ]
+        ],
+        [
+            "expression",
+            ["int_literal"]
+        ],
+        [
+            "expression",
+            ["expression", "plus", "expression"]
+        ],
+        [
+            "expression",
+            ["expression", "minus", "expression"]
+        ],
+        [
+            "expression",
+            ["expression", "times", "expression"]
+        ],
+        [
+            "expression",
+            ["left_paren", "expression", "right_paren"]
+        ],
 
     ],
     "assoc": {"plus":"left","minus":"left","times":"left",},
@@ -76,9 +78,9 @@ def main(fname):
     follow = first_follow.get_follow(g, first_set)
     dfa = lr_parse_common.make_dfa(g, slr1.closure, kernel, first_set)
     action, goto_table = slr1.make_parse_table(dfa, follow, g)
-    ast = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
-    print(ast.gen_ast_digraph())
-    gen_code = gen_ir.CodeGenVisitor(ast)
+    ast_root = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
+    print(ast.gen_ast_digraph(ast_root))
+    gen_code = gen_ir.CodeGenVisitor(ast_root)
     gen_code.accept()
     print(gen_code.code)
 
