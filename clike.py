@@ -22,6 +22,9 @@ rules = [
     scanner.SymbolRule("\+", "plus"),
     scanner.SymbolRule("-", "minus"),
     scanner.SymbolRule("\*", "times"),
+    
+    scanner.SymbolRule("input", "input"),
+    
     scanner.SymbolRule("[ \t\n]", "whitespace", add_symbol=False)
 ]
 
@@ -30,7 +33,7 @@ grammar_dict = {
     "nonterm": ["program", "expression", "return_exp"],
     "term": ["int_type","right_paren","left_paren",
              "left_brace","right_brace","semi",
-             "return","main","int_literal","plus","minus","times"],
+             "return","main","int_literal","plus","minus","times","input"],
     "rules": [
         [   
             "program",
@@ -69,6 +72,11 @@ grammar_dict = {
             ["left_paren", "expression", "right_paren"],
             lambda rule, children: children[0]
         ],
+        [
+            "expression",
+            ["input", "left_paren", "right_paren"],
+            lambda rule, children: ast.ASTNode("input_exp", [])
+        ]
 
     ],
     "assoc": {"plus":"left","minus":"left","times":"left",},
@@ -94,7 +102,9 @@ def main(fname):
     dfa = lr_parse_common.make_dfa(g, slr1.closure, kernel, first_set)
     action, goto_table = slr1.make_parse_table(dfa, follow, g)
     ast_root = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
+    
     #print(ast.gen_ast_digraph(ast_root))
+    
     gen_code = gen_ir.CodeGenVisitor(ast_root)
     gen_code.accept()
     with open(fname + ".ll", "w") as outfile:
