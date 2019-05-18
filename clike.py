@@ -108,7 +108,7 @@ def main(fname):
     gen_code = gen_ir.CodeGenVisitor(ast_root)
     gen_code.accept()
     with open(fname + ".ll", "w") as outfile:
-        outfile.write(gen_code.code)
+        outfile.write(gen_code.get_code())
 
 if __name__ == "__main__":
     main(sys.argv[1])
