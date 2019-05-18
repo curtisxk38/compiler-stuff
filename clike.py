@@ -30,18 +30,38 @@ rules = [
 
 grammar_dict = {
     "start": "program",
-    "nonterm": ["program", "expression", "return_exp"],
+    "nonterm": ["program", "statement_list", "statement", 
+            "expression", "return_exp"],
     "term": ["int_type","right_paren","left_paren",
              "left_brace","right_brace","semi",
              "return","main","int_literal","plus","minus","times","input"],
     "rules": [
+        # main stuff
         [   
             "program",
             ["int_type", "main", "left_paren", 
-                  "right_paren", "left_brace", "return",
-                  "return_exp", "semi", "right_brace"
+                  "right_paren", "left_brace", 
+                  "statement_list",
+                  "right_brace"
             ]
         ],
+        # statements
+        [
+            "statement_list",
+            ["statement_list", "statement"],
+            lambda rule, children: children[0].add_child(children[1])
+        ],
+        [
+            "statement_list",
+            ["statement"],
+            lambda rule, children: ast.ASTNode("statement_list", children)
+        ],
+        [
+            "statement",
+            ["return", "return_exp", "semi"],
+            lambda rule, children: children[1]
+        ],
+        # expressions
         [
             "return_exp",
             ["expression"],
@@ -70,7 +90,7 @@ grammar_dict = {
         [
             "expression",
             ["left_paren", "expression", "right_paren"],
-            lambda rule, children: children[0]
+            lambda rule, children: children[1]
         ],
         [
             "expression",
@@ -103,7 +123,7 @@ def main(fname):
     action, goto_table = slr1.make_parse_table(dfa, follow, g)
     ast_root = lr_parse_common.parse(dfa, action, goto_table, tokens, g)
     
-    #print(ast.gen_ast_digraph(ast_root))
+    print(ast.gen_ast_digraph(ast_root))
     
     gen_code = gen_ir.CodeGenVisitor(ast_root)
     gen_code.accept()

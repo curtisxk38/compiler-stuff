@@ -16,6 +16,24 @@ class ASTNode:
                 new_child.parent = self
                 self.children[idx] = new_child
 
+    def add_child(self, new_child):
+        """
+        in lambda exp for a node
+        we want to add a new child to this node 
+        and return a reference to this node
+
+        this method is used for list type rules:
+            ex: S -> Sa | a
+            after 3 uses: want a AST like:
+                S
+              __|__
+             |  |  |
+             a  a  a
+        """
+        new_child.parent = self
+        self.children.append(new_child)
+        return self
+
     def __repr__(self):
        return self.node_type
 
