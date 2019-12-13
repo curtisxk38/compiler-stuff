@@ -193,6 +193,7 @@ def parse(dfa, action_table, goto_table, tokens, g):
         except ValueError:
             # sym is $
             sym = -1
+        #print("{} {}".format(current_state, sym))
         action = action_table[current_state][sym]
         
         if action is None:
@@ -214,7 +215,13 @@ def parse(dfa, action_table, goto_table, tokens, g):
             del parse_stack[-reduce_len:]
             # get children of the new AST node from the ast stack
             children = ast_stack[-reduce_len:]
+            
             # create new AST node
+            
+            print(f"rule: {reduce_rule}")
+            print(f"children: {children}")   
+            print(f"ast_stack: {ast_stack}")
+            
             new_node = reduce_rule.to_node(reduce_rule, children)
             # remove children from ast stack
             ast_stack = ast_stack[:-reduce_len]

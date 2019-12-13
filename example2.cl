@@ -1,4 +1,4 @@
 
 int main() {
-    return 4 + input();
+    return input();
 }

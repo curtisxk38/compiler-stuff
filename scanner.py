@@ -22,7 +22,11 @@ class Symbol:
     def __eq__(self, other):
         if not isinstance(other, Symbol):
             return False
-        return self.__dict__ == other.__dict__
+        return (self.token, self.lexeme, self.value, self.line, self.col) == \
+            (other.token, other.lexeme, other.value, other.line, other.col)
+
+    def __hash__(self):
+        return hash( (self.token, self.lexeme, self.value, self.line, self.col) )
 
 def scan(f_iter, rules):
     """

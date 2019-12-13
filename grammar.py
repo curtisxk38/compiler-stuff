@@ -43,7 +43,7 @@ class Rule:
             self.to_node = None
 
     def __repr__(self):
-        return "{} -> {}".format(self.lhs, "".join(self.rhs))
+        return "{} -> {}".format(self.lhs, " ".join(self.rhs))
 
 def make_dummy_grammar(fname):
     with open(fname, "r") as f:
