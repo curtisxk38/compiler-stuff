@@ -219,10 +219,6 @@ def parse(dfa, action_table, goto_table, tokens, g):
             
             # create new AST node
             
-            print(f"rule: {reduce_rule}")
-            print(f"children: {children}")   
-            print(f"ast_stack: {ast_stack}")
-            
             new_node = reduce_rule.to_node(reduce_rule, children)
             # remove children from ast stack
             ast_stack = ast_stack[:-reduce_len]
