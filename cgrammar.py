@@ -1,5 +1,10 @@
 import ast
 
+def temp(rule, children):
+    print(children)
+    return children[0].add_child(children[1])
+
+
 grammar = {
     "start": "program",
     "nonterm": ["program", "statement_list", "statement",
@@ -22,7 +27,7 @@ grammar = {
         [
             "statement_list",
             ["statement_list", "statement"],
-            lambda rule, children: children[0].add_child(children[1])
+            temp
         ],
         [
             "statement_list",

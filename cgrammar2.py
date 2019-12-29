@@ -55,8 +55,22 @@ grammar = {
             ["int_literal"],
             lambda rule, children: ast.ASTNode("int_literal", [], symbol=children[0])
         ],
+                [
+            "expression",
+            ["expression", "plus", "expression"],
+            lambda rule, children: ast.ASTNode("plus_exp", [children[0], children[2]])
+        ],
+              [
+            "expression",
+            ["expression", "times", "expression"],
+            lambda rule, children: ast.ASTNode("times_exp", [children[0], children[2]])
+        ],
 
-
+        [
+            "expression",
+            ["left_paren", "expression", "right_paren"],
+            lambda rule, children: children[1]
+        ],
         [
             "expression",
             ["input", "left_paren", "right_paren"],
