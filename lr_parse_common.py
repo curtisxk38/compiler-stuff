@@ -197,7 +197,8 @@ def parse(dfa, action_table, goto_table, tokens, g):
         action = action_table[current_state][sym]
         
         if action is None:
-            raise ParseError("No valid action for state {} and symbol {}".format(dfa.states[current_state], g.term[sym]))
+            print("No valid action for state {} and symbol {}".format(dfa.states[current_state], g.term[sym]))
+            raise ParseError("Failed parsing at {}".format(token_symbol))
         elif action == "accept":
             break
         elif action[0] == "s":
