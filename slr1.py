@@ -28,7 +28,7 @@ class LR0Item:
     def __repr__(self):
         rhs_with_dist = self.rule.rhs[:]
         rhs_with_dist.insert(self.dist_pos, ".")
-        return "{} -> {}".format(self.rule.lhs, "".join(rhs_with_dist))
+        return "{} -> {}".format(self.rule.lhs, " ".join(rhs_with_dist))
 
 
 

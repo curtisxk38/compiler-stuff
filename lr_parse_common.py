@@ -1,5 +1,8 @@
+from typing import List
+
 import grammar
 import ast
+from scanner import Symbol
 
 
 class DFA:
@@ -24,8 +27,10 @@ class DFA:
 
     def gen_state_label(self, state):
         label = ""
-        for rule in state.dist_rules:
-            label += "{}\\n".format(rule)
+        print(state.dist_rules)
+        label = " ".join([str(rule) for rule in state.dist_rules]) + "\\n"
+        #for rule in state.dist_rules:
+        #    label += "{}\\n".format(rule)
         return label
 
 
@@ -73,20 +78,22 @@ class ReduceReduceError(Error):
     """
     pass
 
+
 def construction_table_error(table, index, col_index, new_rule):
     old_rule = table[index][col_index]
     print("Tried to put {} where {} already exists".format(new_rule, table[index][col_index]))
     if old_rule[0] == "r" and new_rule[0] == "r":
         raise ReduceReduceError("Reduce/Reduce error between states {} and {}".format(old_rule[1:], new_rule[1:]))
     if old_rule[0] == "s" and new_rule[0] == "r":
-        raise ShiftReduceError("Shift/Reduce error: shift to state {}, reduce by rule {}".format(old_rule[1:], new_rule[1:]))
+        raise ShiftReduceError(
+            "Shift/Reduce error: shift to state {}, reduce by rule {}".format(old_rule[1:], new_rule[1:]))
     if old_rule[0] == "r" and new_rule[0] == "s":
-        raise ShiftReduceError("Shift/Reduce error: shift to state {}, reduce by rule {}".format(new_rule[1:], old_rule[1:]))    
+        raise ShiftReduceError(
+            "Shift/Reduce error: shift to state {}, reduce by rule {}".format(new_rule[1:], old_rule[1:]))
     raise ValueError("Not SLR1, multiple entries for action[{}][{}]".format(index, col_index))
 
 
-
-def augment_grammar(g):
+def augment_grammar(g: grammar.Grammar):
     """
     augment grammar g by adding new rule, S' -> S, where S was start symbol of g
     changes g in place
@@ -97,6 +104,7 @@ def augment_grammar(g):
     g.nonterm.append(new_start)
     new_rule = grammar.Rule([new_start, [old_start]])
     g.rules.append(new_rule)
+
 
 def make_dfa(g, closure, kernel, first_set):
     start_state = State(closure(set([kernel]), g, first_set), True)
@@ -129,6 +137,7 @@ def make_dfa(g, closure, kernel, first_set):
 
     return DFA(states, transitions, states[0])
 
+
 def goto(closure, items, sym, g, first_set):
     new_items = []
     for item in items:
@@ -137,6 +146,7 @@ def goto(closure, items, sym, g, first_set):
             if sym_after == sym:
                 new_items.append(item.advance())
     return closure(set(new_items), g, first_set)
+
 
 def handle_conflict(action, state_index, col_index, new_rule, g):
     # try to resolve conflict with associativity / precedence
@@ -181,7 +191,8 @@ def handle_conflict(action, state_index, col_index, new_rule, g):
     else:
         raise NotImplementedError("how to handle reduce/reduce conflict with associativity/precedence?")
 
-def parse(dfa, action_table, goto_table, tokens, g):
+
+def parse(dfa: DFA, action_table, goto_table, tokens: List[Symbol], g):
     start_state = dfa.states.index(dfa.start_state)
     parse_stack = [start_state]
     ast_stack = []
@@ -193,9 +204,9 @@ def parse(dfa, action_table, goto_table, tokens, g):
         except ValueError:
             # sym is $
             sym = -1
-        #print("{} {}".format(current_state, sym))
+        # print("{} {}".format(current_state, sym))
         action = action_table[current_state][sym]
-        
+
         if action is None:
             print("No valid action for state {} and symbol {}".format(dfa.states[current_state], g.term[sym]))
             raise ParseError("Failed parsing at {}".format(token_symbol))
@@ -212,14 +223,19 @@ def parse(dfa, action_table, goto_table, tokens, g):
         elif action[0] == "r":
             reduce_rule = g.rules[int(action[1])]
             reduce_len = len(reduce_rule.rhs)
-            # pop off states from parse stack
-            del parse_stack[-reduce_len:]
+
             # get children of the new AST node from the ast stack
             children = ast_stack[-reduce_len:]
-            
+
             # create new AST node
-            
-            new_node = reduce_rule.to_node(reduce_rule, children)
+            try:
+                new_node = reduce_rule.to_node(reduce_rule, children)
+            except Exception as e:
+                print("Error reducing by rule: {}".format(reduce_rule))
+                raise e
+
+            # pop off states from parse stack
+            del parse_stack[-reduce_len:]
             # remove children from ast stack
             ast_stack = ast_stack[:-reduce_len]
             # push new ASTn node onto ast stack
@@ -231,4 +247,3 @@ def parse(dfa, action_table, goto_table, tokens, g):
             next_state = goto_table[exposed_state][lhs_symbol]
             parse_stack.append(next_state)
     return ast_stack[0]
-    

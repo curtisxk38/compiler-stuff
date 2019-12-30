@@ -2,6 +2,7 @@ import ast
 
 def temp(rule, children):
     print(children)
+    print(type(children[0]))
     return children[0].add_child(children[1])
 
 
@@ -17,10 +18,10 @@ grammar = {
         # main stuff
         [
             "program",
-            ["int_type", "main", "left_paren",
-                  "right_paren", "left_brace",
-                  "statement_list",
-                  "right_brace"
+            [
+                "left_brace",
+                "statement_list",
+                "right_brace"
             ]
         ],
         # statements

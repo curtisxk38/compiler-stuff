@@ -17,11 +17,12 @@ grammar = {
         # main stuff
         [
             "program",
-            ["int_type", "main", "left_paren",
-                  "right_paren", "left_brace",
+            [
+                "left_brace",
                   "statement_list",
                   "right_brace"
-            ]
+            ],
+            lambda rule, children: ast.ASTNode("program", [children[1]])
         ],
         # statements
         [
@@ -60,16 +61,15 @@ grammar = {
             ["expression", "plus", "expression"],
             lambda rule, children: ast.ASTNode("plus_exp", [children[0], children[2]])
         ],
-              [
+        [
+            "expression",
+            ["expression", "minus", "expression"],
+            lambda rule, children: ast.ASTNode("minus_exp", [children[0], children[2]])
+        ],
+                [
             "expression",
             ["expression", "times", "expression"],
             lambda rule, children: ast.ASTNode("times_exp", [children[0], children[2]])
-        ],
-
-        [
-            "expression",
-            ["left_paren", "expression", "right_paren"],
-            lambda rule, children: children[1]
         ],
         [
             "expression",
